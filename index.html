@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>6x6 Grid</title>
+
+<style>
+*{margin:0;padding:0;}
+
+body{
+    height:100vh;
+    background:#fc854adb;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    position:relative;
+}
+
+/* Player Turn Text */
+p{
+    color:white;
+    font-size:1.8rem;
+    font-weight:900;
+    text-shadow:2px -1px 5px #090808;
+    margin-bottom:10px;
+}
+
+/* HOW TO PLAY BUTTON - Top right */
+#howBtn{
+    position:absolute;
+    top:12px;
+    right:12px;
+    background:transparent;
+    color: #4c4ef8;
+    font-weight: 900;
+    padding:7px 16px;
+    border: none;
+    cursor:pointer;
+    font-size:1rem;
+}
+
+/* MAIN GAME BOX */
+.box{
+    width:90vmin;
+    height:90vmin;
+    background:#f77233ed;
+    border-radius:10%;
+    box-shadow:0 8px 35px rgba(0,0,0,0.3);
+    display:grid;
+    grid-template-columns:repeat(6,1fr);
+    grid-template-rows:repeat(6,1fr);
+    grid-gap:5px;
+    padding:12px;
+}
+
+.ball{
+    width:100%; height:100%;
+    border:none;
+    border-radius:50%;
+    background:#fc854adb;
+}
+
+/* RESTART BUTTON */
+#restartBtn{
+    margin-top:12px;
+    padding:9px 22px;
+    background:#efcdc2;
+    border:none;
+    border-radius:10px;
+    font-size:1.2rem;
+    cursor:pointer;
+    box-shadow:0 4px 12px rgba(0,0,0,0.4);
+}
+
+/* BLINK EFFECT */
+.blink-green{animation:blinkGreen .4s infinite alternate;}
+@keyframes blinkGreen{from{background:green;}to{background:transparent;}}
+
+.blink-red{animation:blinkRed .4s infinite alternate;}
+@keyframes blinkRed{from{background:red;}to{background:transparent;}}
+
+/* HOW TO PLAY OVERLAY */
+#overlay{
+    position:fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background:#00000060;
+    backdrop-filter:blur(4px);
+    display:none;
+    justify-content:center;
+    align-items:center;
+}
+
+#howBox{
+    width:80%;
+    max-width:420px;
+    background:#f49667fd;
+    padding:22px;
+    border-radius:14px;
+    text-align:center;
+    box-shadow:0 8px 25px rgba(0,0,0,0.4);
+    position:relative;
+}
+
+#langBtn{
+    position:absolute;
+    top:10px; right:12px;
+    background:#0c4ecc;
+    border:none;
+    padding:5px 10px;
+    border-radius:6px;
+    color:white;
+    cursor:pointer;
+}
+
+#closeBtn{
+    margin-top:18px;
+    background:#d54214;
+    border:none;
+    padding:8px 15px;
+    border-radius:6px;
+    color:white;
+    cursor:pointer;
+}
+
+/* SCOREBOARD */
+#scoreboard{
+    position:absolute;
+    top:12px;
+    left:12px;
+    background:#fdd9cbd1;
+    padding:10px 14px;
+    border-radius:12px;
+    box-shadow:0 4px 18px rgba(0,0,0,0.28);
+    backdrop-filter:blur(3px);
+    font-size:1rem;
+    font-weight:700;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+}
+.player-score{
+    text-shadow:1px 1px 3px #0000005c;
+}
+.green-score{ color:green; }
+.red-score{ color:red; }
+
+</style>
+</head>
+
+<body>
+
+<p>Paglu 😜</p>
+<button id="howBtn">How to play ^</button>
+
+<div class="box"></div>
+<button id="restartBtn">Restart 🔄</button>
+
+
+<!-- HOW TO PLAY POPUP -->
+<div id="overlay">
+    <div id="howBox">
+        <span id="langBtn">English</span>
+        <h2 id="title">कैसे खेलें?</h2>
+        <p id="content">
+            दो खिलाड़ी बारी-बारी से बॉल डालते हैं।<br>
+            बॉल नीचे से ऊपर भरती है।<br>
+            जो खिलाड़ी पहले चार एक जैसी रंग की बॉल लाइन में जोड़ देगा — वही विजेता होगा!
+        </p>
+        <button id="closeBtn">Close</button>
+    </div>
+</div>
+
+<div id="scoreboard">
+    <div class="player-score green-score">🟢 Baba Tillu: <span id="greenScore">0</span></div>
+    <div class="player-score red-score">🔴 Paglu: <span id="redScore">0</span></div>
+</div>
+
+
+<script>
+const box = document.querySelector(".box");
+const p = document.querySelector("p");
+
+for(let i=0;i<36;i++){
+    let button=document.createElement("button");
+    button.className="ball";
+    box.appendChild(button);
+}
+const ball=document.querySelectorAll(".ball");
+
+/* COLUMN ARRANGEMENT */
+const c1=[ball[30],ball[24],ball[18],ball[12],ball[6],ball[0]];
+const c2=[ball[31],ball[25],ball[19],ball[13],ball[7],ball[1]];
+const c3=[ball[32],ball[26],ball[20],ball[14],ball[8],ball[2]];
+const c4=[ball[33],ball[27],ball[21],ball[15],ball[9],ball[3]];
+const c5=[ball[34],ball[28],ball[22],ball[16],ball[10],ball[4]];
+const c6=[ball[35],ball[29],ball[23],ball[17],ball[11],ball[5]];
+
+let move1=0,color="";
+let ind1=0,ind2=0,ind3=0,ind4=0,ind5=0,ind6=0;
+
+/* INSERT BALL LOGIC */
+function fill(b){
+    if(c1.includes(b)){ c1[ind1].style.background=color; c1[ind1].disabled=true; ind1++; }
+    else if(c2.includes(b)){ c2[ind2].style.background=color; c2[ind2].disabled=true; ind2++; }
+    else if(c3.includes(b)){ c3[ind3].style.background=color; c3[ind3].disabled=true; ind3++; }
+    else if(c4.includes(b)){ c4[ind4].style.background=color; c4[ind4].disabled=true; ind4++; }
+    else if(c5.includes(b)){ c5[ind5].style.background=color; c5[ind5].disabled=true; ind5++; }
+    else if(c6.includes(b)){ c6[ind6].style.background=color; c6[ind6].disabled=true; ind6++; }
+}
+
+ball.forEach(b=>{
+    b.onclick=()=>{
+        color = move1===0 ? "green" : "red";
+        p.innerText = move1===0 ? "Baba tillu 🤡" : "Paglu 😜";
+        move1 = move1===0 ? 1 : 0;
+        fill(b);
+        checkWin();
+    }
+});
+
+/* WIN CHECK */
+function checkWin(){
+    const w=[
+        [ball[30],ball[31],ball[32],ball[33]],[ball[31],ball[32],ball[33],ball[34]],[ball[32],ball[33],ball[34],ball[35]],
+        [ball[24],ball[25],ball[26],ball[27]],[ball[25],ball[26],ball[27],ball[28]],[ball[26],ball[27],ball[28],ball[29]],
+        [ball[18],ball[19],ball[20],ball[21]],[ball[19],ball[20],ball[21],ball[22]],[ball[20],ball[21],ball[22],ball[23]],
+        [ball[12],ball[13],ball[14],ball[15]],[ball[13],ball[14],ball[15],ball[16]],[ball[14],ball[15],ball[16],ball[17]],
+        [ball[6],ball[7],ball[8],ball[9]],[ball[7],ball[8],ball[9],ball[10]],[ball[8],ball[9],ball[10],ball[11]],
+        [ball[0],ball[1],ball[2],ball[3]],[ball[1],ball[2],ball[3],ball[4]],[ball[2],ball[3],ball[4],ball[5]]
+    ];
+
+    for(let combo of w){
+        let c1=combo[0].style.background;
+        let c2=combo[1].style.background;
+        let c3=combo[2].style.background;
+        let c4=combo[3].style.background;
+
+        if(c1!=="" && c1===c2 && c2===c3 && c3===c4){
+            
+            if(c1==="green"){
+                greenWins++;
+                greenScore.innerText = greenWins;
+            } else {
+                redWins++;
+                redScore.innerText = redWins;
+            }
+
+            combo.forEach(b=>b.classList.add(c1==="green"?"blink-green":"blink-red"));
+            p.innerText = c1==="green"? "Baba Tillu 🤡 <<WINNER!>>" : "Paglu 😜 <<WINNER!>>";
+            ball.forEach(b=>b.disabled=true);
+            return;
+        }
+    }
+}
+
+//Scoreboard LOGIC:-
+let greenWins = 0;
+let redWins = 0;
+
+const greenScore = document.getElementById("greenScore");
+const redScore = document.getElementById("redScore");
+/* ---------------------- HOW TO PLAY ---------------------- */
+const overlay=document.getElementById("overlay");
+const howBtn=document.getElementById("howBtn");
+const langBtn=document.getElementById("langBtn");
+const title=document.getElementById("title");
+const content=document.getElementById("content");
+const closeBtn=document.getElementById("closeBtn");
+
+howBtn.onclick=()=>{
+    overlay.style.display="flex";
+    ball.forEach(b=>b.disabled=true);
+};
+
+closeBtn.onclick=()=>{
+    overlay.style.display="none";
+    ball.forEach(b=>b.disabled=false);
+};
+
+let lang="hi";
+langBtn.onclick=()=>{
+    if(lang==="hi"){
+        lang="en"; langBtn.innerText="Hindi";
+        title.innerText="How to Play?";
+        content.innerHTML="Two players take turns. Drop balls in columns. First to connect 4 same colors in a line wins.";
+    }else{
+        lang="hi"; langBtn.innerText="English";
+        title.innerText="कैसे खेलें?";
+        content.innerHTML="दो खिलाड़ी बारी-बारी से बॉल डालते हैं। जो पहले चार एक रंग की बॉल जोड़ देगा — वही जीतेगा।";
+    }
+};
+
+/* ---------------------- RESTART ---------------------- */
+document.getElementById("restartBtn").onclick=()=>{
+    ball.forEach(b=>{
+        b.style.background = "";   // <--- yaha EMPTY kar do
+        b.disabled = false;
+        b.classList.remove("blink-green","blink-red");
+    });
+
+    // Sare index reset
+    ind1 = ind2 = ind3 = ind4 = ind5 = ind6 = 0;
+
+    // Move reset
+    move1 = 0;
+
+    // Again first player text
+    p.innerText = "Paglu 😜";
+};
+</script>
+
+</body>
+</html>
